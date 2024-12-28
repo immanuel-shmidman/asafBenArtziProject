@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>מערכת ניהול</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            margin: 0;
+            padding: 16px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-top: 24px;
+        }
+        .menu-button {
+            background: #ffffff;
+            border: none;
+            padding: 32px 16px;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            cursor: pointer;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            color: #1f2937;
+            transition: transform 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 120px;
+        }
+        .menu-button.orders { background: #3b82f6; color: white; }
+        .menu-button.inventory { background: #10b981; color: white; }
+        .menu-button.sales { background: #8b5cf6; color: white; }
+        .menu-button.customers { background: #f59e0b; color: white; }
+        
+        .section {
+            display: none;
+        }
+        .section.active {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 16px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            margin-bottom: 8px;
+        }
+        .back-button {
+            background: #6b7280;
+            margin-bottom: 16px;
+        }
+        h1 {
+            text-align: center;
+            color: #1f2937;
+            margin-bottom: 32px;
+        }
+        .icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        /* סגנונות נוספים לטופס הזמנות */
+        .order-box {
+            border: 1px solid #ddd;
+            padding: 16px;
+            margin: 16px 0;
+            border-radius: 8px;
+            background: #f8fafc;
+        }
+        .add-button {
+            background: #16a34a;
+        }
+        .remove-button {
+            background: #dc2626;
+        }
+        .share-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin: 16px 0;
+        }
+        .share-btn {
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        .share-btn.whatsapp { background: #25D366; }
+        .share-btn.email { background: #DB4437; }
+        .share-btn.other { background: #4A5568; }
+        
+        .alert {
+            padding: 12px;
+            background: #86efac;
+            color: #166534;
+            border-radius: 4px;
+            margin-bottom: 16px;
+            display: none;
+        }
+        
+        @media print {
+            .no-print { display: none; }
+            .container { box-shadow: none; padding: 0; }
+            button { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <!-- דף הבית -->
+    <div id="homePage" class="container section active">
+        <h1>מערכת ניהול</h1>
+        <div class="grid">
+            <button onclick="showSection('ordersSection')" class="menu-button orders">
+                <div class="icon">📝</div>
+                הזמנות ייצור
+            </button>
+            <button onclick="showSection('inventorySection')" class="menu-button inventory">
+                <div class="icon">📦</div>
+                מלאי
+            </button>
+            <button onclick="showSection('salesSection')" class="menu-button sales">
+                <div class="icon">💰</div>
+                מכירות
+            </button>
+            <button onclick="showSection('customersSection')" class="menu-button customers">
+                <div class="icon">👥</div>
+                לקוחות
+            </button>
+        </div>
+    </div>
+
+    <!-- הזמנות ייצור -->
+    <div id="ordersSection" class="container section">
+        <button onclick="showSection('homePage')" class="back-button no-print">חזרה לדף הבית</button>
+        <h1>הזמנות ייצור</h1>
+        <div id="successAlert" class="alert">ההזמנה נשלחה בהצלחה!</div>
+        
+        <form id="productionForm">
+            <div class="form-group">
+                <label>מספר הזמנה</label>
+                <input type="text" id="orderNumber" required>
+            </div>
+            
+            <div class="form-group">
+                <label>תאריך</label>
+                <input type="date" id="orderDate" required>
+            </div>
+
+            <div id="ordersContainer"></div>
+
+            <button type="button" class="add-button" onclick="addNewOrder()">
+                <span class="icon">➕</span> הוסף הזמנה נוספת
+            </button>
+
+            <div class="share-buttons">
+                <button type="button" onclick="shareOrder('whatsapp')" class="share-btn whatsapp">
+                    <span class="icon">📱</span> שתף בווטסאפ
+                </button>
+                <button type="button" onclick="shareOrder('email')" class="share-btn email">
+                    <span class="icon">📧</span> שתף באימייל
+                </button>
+                <button type="button" onclick="shareOrder('other')" class="share-btn other">
+                    <span class="icon">📤</span> שתף
+                </button>
+            </div>
+
+            <button type="button" onclick="window.print()" class="print-btn">
+                <span class="icon">🖨️</span> הדפס הזמנה
+            </button>
+        </form>
+    </div>
+
+    <!-- מלאי -->
+    <div id="inventorySection" class="container section">
+        <button onclick="showSection('homePage')" class="back-button">חזרה לדף הבית</button>
+        <h1>ניהול מלאי</h1>
+        <div id="inventoryForm">בפיתוח...</div>
+    </div>
+
+    <!-- מכירות -->
+    <div id="salesSection" class="container section">
+        <button onclick="showSection('homePage')" class="back-button">חזרה לדף הבית</button>
+        <h1>רישום מכירה</h1>
+        <div id="salesForm">בפיתוח...</div>
+    </div>
+
+    <!-- לקוחות -->
+    <div id="customersSection" class="container section">
+        <button onclick="showSection('homePage')" class="back-button">חזרה לדף הבית</button>
+        <h1>ניהול לקוחות</h1>
+        <div id="customersForm">בפיתוח...</div>
+    </div>
+
+    <script>
+        // פונקציות ניווט
+        function showSection(sectionId) {
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById(sectionId).classList.add('active');
+        }
+
+        // תבנית להזמנה חדשה
+        const orderTemplate = `
+            <div class="order-box">
+                <h3>הזמנה</h3>
+                <div class="form-group">
+                    <label>שם לקוח</label>
+                    <input type="text" class="customerName" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>סוג מוצר</label>
+                    <select class="productType" required>
+                        <option value="">בחר סוג מוצר</option>
+                        <option value="tops">טופים</option>
+                        <option value="skins">סקינים</option>
+                        <option value="kosherTop">טופ כשר</option>
+                        <option value="ab">AB</option>
+                        <option value="frontLace">פרונט לייס</option>
+                        <option value="topWig">פאות טופ</option>
+                        <option value="skinWig">פאות סקין</option>
+                        <option value="repair">תיקון</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>אורך מינימום</label>
+                    <select class="minLength" required>
+                        <option value="">בחר אורך</option>
+                        <option value="20">20</option>
+                        <option value="25">25</option>
+                        <option value="30">30</option>
+                        <option value="35">35</option>
+                        <option value="40">40</option>
+                        <option value="other">אחר</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>צפיפות</label>
+                    <select class="density" required>
+                        <option value="">בחר צפיפות</option>
+                        <option value="regular">רגילה</option>
+                        <option value="low">נמוכה</option>
+                        <option value="full">מלאה</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>כמות</label>
+                    <input type="number" class="quantity" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>הערות</label>
+                    <textarea class="notes" rows="2"></textarea>
+                </div>
+
+                <button type="button" class="remove-button" onclick="removeOrder(this)">
+                    <span class="icon">🗑️</span> הסר הזמנה
+                </button>
+            </div>
+        `;
+
+        // פונקציות לניהול הזמנות
+        function addNewOrder() {
+            const container = document.getElementById('ordersContainer');
+            const orderDiv = document.createElement('div');
+            orderDiv.innerHTML = orderTemplate;
+            container.appendChild(orderDiv);
+            updateOrderNumbers();
+        }
+
+        function removeOrder(button) {
+            const orderBox = button.closest('.order-box');
+            if (document.querySelectorAll('.order-box').length > 1) {
+                orderBox.remove();
+                updateOrderNumbers();
+            }
+        }
+
+        function updateOrderNumbers() {
+            document.querySelectorAll('.order-box h3').forEach((header, index) => {
+                header.textContent = `הזמנה ${index + 1}`;
+            });
+        }
+
+        // פונקציות שיתוף
+        function shareOrder(method) {
+            const orderText = prepareOrderText();
+            
+            switch(method) {
+                case 'whatsapp':
+                    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(orderText)}`;
+                    window.open(whatsappUrl);
+                    break;
+                    
+                case 'email':
+                    const emailSubject = `הזמנת ייצור מספר ${document.getElementById('orderNumber').value}`;
+                    const mailtoLink = `mailto:?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(orderText)}`;
+                    window.location.href = mailtoLink;
+                    break;
+                    
+                case 'other':
+                    if (navigator.share) {
+                        navigator.share({
+                            title: 'הזמנת ייצור',
+                            text: orderText
+                        });
+                    } else {
+                        alert('שיתוף אינו נתמך במכשיר זה');
+                    }
+                    break;
+            }
+        }
+
+        function prepareOrderText() {
+            const orderNumber = document.getElementById('orderNumber').value;
+            const orderDate = document.getElementById('orderDate').value;
+            let text = `הזמנת ייצור מספר: ${orderNumber}\n`;
+            text += `תאריך: ${formatDate(orderDate)}\n`;
+            text += '===========================================\n\n';
+
+            document.querySelectorAll('.order-box').forEach((orderBox, index) => {
+                text += `הזמנה ${index + 1}:\n`;
+                text += '---------\n';
+                text += `שם לקוח: ${orderBox.querySelector('.customerName').value}\n`;
+                text += `סוג מוצר: ${orderBox.querySelector('.productType').value}\n`;
+                text += `אורך: ${orderBox.querySelector('.minLength').value}\n`;
+                text += `צפיפות: ${orderBox.querySelector('.density').value}\n`;
+                text += `כמות: ${orderBox.querySelector('.quantity').value}\n`;
+                text += `הערות: ${orderBox.querySelector('.notes').value}\n\n`;
+            });
+
+            return text;
+        }
+
+        function formatDate(dateString) {
+            const [year, month, day] = dateString.split('-');
+            return `${day}/${month}/${year}`;
+        }
+
+        // טעינה ראשונית
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('orderDate').valueAsDate = new Date();
+            addNewOrder();
+        });
+    </script>
+</body>
+</html>
